@@ -1,13 +1,14 @@
+-- made by haker999
+
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
 
 local player = Players.LocalPlayer
 local character
 
 local lines = {}
 
-local LINE_LENGTH = 1.5
-local LINE_THICKNESS = 0.025
+local LINE_LENGTH = 2.5
+local LINE_THICKNESS = 0.035
 local LINE_TRANSPARENCY = 0.5
 
 local function removeLines()
