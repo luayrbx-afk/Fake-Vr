@@ -1,4 +1,5 @@
 -- made by haker999
+-- V1.8
 
 local Players = game:GetService("Players")
 
@@ -7,18 +8,20 @@ local character
 
 local lines = {}
 
-local LINE_LENGTH = 2.5
-local LINE_THICKNESS = 0.035
-local LINE_TRANSPARENCY = 0.5
+local LINE_LENGTH = 4
+local START_WIDTH = 0.045
+local END_WIDTH = 0.005
+local START_TRANSPARENCY = 0.35
+local END_TRANSPARENCY = 1
 
 local function removeLines()
-	for _, line in pairs(lines) do
-		if line then
-			line:Destroy()
+	for _, object in ipairs(lines) do
+		if object then
+			object:Destroy()
 		end
 	end
 
-	lines = {}
+	table.clear(lines)
 end
 
 local function createLine(hand)
@@ -36,12 +39,18 @@ local function createLine(hand)
 	beam.Name = "HandForwardLine"
 	beam.Attachment0 = attachment0
 	beam.Attachment1 = attachment1
-	beam.Width0 = LINE_THICKNESS
-	beam.Width1 = LINE_THICKNESS
+	beam.Width0 = START_WIDTH
+	beam.Width1 = END_WIDTH
 	beam.Color = ColorSequence.new(Color3.new(1, 1, 1))
-	beam.Transparency = NumberSequence.new(LINE_TRANSPARENCY)
+	beam.Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, START_TRANSPARENCY),
+		NumberSequenceKeypoint.new(0.35, 0.55),
+		NumberSequenceKeypoint.new(0.7, 0.8),
+		NumberSequenceKeypoint.new(1, END_TRANSPARENCY)
+	})
 	beam.FaceCamera = true
 	beam.LightEmission = 1
+	beam.Segments = 10
 	beam.Parent = hand
 
 	table.insert(lines, attachment0)
@@ -54,8 +63,8 @@ local function setupCharacter(newCharacter)
 
 	character = newCharacter
 
-	local leftHand = character:FindFirstChild("LeftHand") or character:FindFirstChild("Left Arm")
-	local rightHand = character:FindFirstChild("RightHand") or character:FindFirstChild("Right Arm")
+	local leftHand = character:WaitForChild("LeftHand", 5) or character:FindFirstChild("Left Arm")
+	local rightHand = character:WaitForChild("RightHand", 5) or character:FindFirstChild("Right Arm")
 
 	if leftHand then
 		createLine(leftHand)
