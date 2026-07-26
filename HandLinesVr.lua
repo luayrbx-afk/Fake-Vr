@@ -1,10 +1,19 @@
 -- made by haker999
--- V1.9
+-- V2.0
 
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 
 local player = Players.LocalPlayer
 local character
+
+local linesFolder = workspace:FindFirstChild("HandLinesVr")
+
+if not linesFolder then
+	linesFolder = Instance.new("Folder")
+	linesFolder.Name = "HandLinesVr"
+	linesFolder.Parent = workspace
+end
 
 local lines = {}
 
@@ -27,13 +36,11 @@ end
 local function createLine(hand)
 	local attachment0 = Instance.new("Attachment")
 	attachment0.Name = "HandLineStart"
-	attachment0.Position = Vector3.new(0, -0.15, 0)
-	attachment0.Parent = hand
+	attachment0.Parent = linesFolder
 
 	local attachment1 = Instance.new("Attachment")
 	attachment1.Name = "HandLineEnd"
-	attachment1.Position = Vector3.new(0, -LINE_LENGTH, 0)
-	attachment1.Parent = hand
+	attachment1.Parent = linesFolder
 
 	local beam = Instance.new("Beam")
 	beam.Name = "HandDownLine"
@@ -51,11 +58,17 @@ local function createLine(hand)
 	beam.FaceCamera = true
 	beam.LightEmission = 1
 	beam.Segments = 10
-	beam.Parent = hand
+	beam.Parent = linesFolder
 
 	table.insert(lines, attachment0)
 	table.insert(lines, attachment1)
 	table.insert(lines, beam)
+
+	return {
+		hand = hand,
+		attachment0 = attachment0,
+		attachment1 = attachment1
+	}
 end
 
 local function setupCharacter(newCharacter)
@@ -67,11 +80,11 @@ local function setupCharacter(newCharacter)
 	local rightHand = character:WaitForChild("RightHand", 5) or character:FindFirstChild("Right Arm")
 
 	if leftHand then
-		createLine(leftHand)
+		table.insert(lines, createLine(leftHand))
 	end
 
 	if rightHand then
-		createLine(rightHand)
+		table.insert(lines, createLine(rightHand))
 	end
 end
 
@@ -80,3 +93,18 @@ player.CharacterAdded:Connect(setupCharacter)
 if player.Character then
 	setupCharacter(player.Character)
 end
+
+RunService.RenderStepped:Connect(function()
+	for _, lineData in ipairs(lines) do
+		if typeof(lineData) == "table" and lineData.hand and lineData.hand.Parent then
+			local hand = lineData.hand
+			local attachment0 = lineData.attachment0
+			local attachment1 = lineData.attachment1
+
+			local handCFrame = hand.CFrame
+
+			attachment0.WorldCFrame = handCFrame * CFrame.new(0, -0.15, 0)
+			attachment1.WorldCFrame = handCFrame * CFrame.new(0, -LINE_LENGTH, 0)
+		end
+	end
+end)
