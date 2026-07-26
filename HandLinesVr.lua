@@ -1,5 +1,5 @@
 -- made by haker999
--- V2.3
+-- V2.2
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
