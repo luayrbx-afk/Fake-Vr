@@ -1,11 +1,13 @@
 -- made by haker999
--- V2.0
+-- V2.1
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
 local player = Players.LocalPlayer
 local character
+local humanoid
+local moveForward = false
 
 local linesFolder = workspace:FindFirstChild("HandLinesVr")
 
@@ -25,7 +27,7 @@ local END_TRANSPARENCY = 1
 
 local function removeLines()
 	for _, object in ipairs(lines) do
-		if object then
+		if object and object.Parent then
 			object:Destroy()
 		end
 	end
@@ -75,9 +77,10 @@ local function setupCharacter(newCharacter)
 	removeLines()
 
 	character = newCharacter
+	humanoid = character:WaitForChild("Humanoid")
 
-	local leftHand = character:WaitForChild("LeftHand", 5) or character:FindFirstChild("Left Arm")
-	local rightHand = character:WaitForChild("RightHand", 5) or character:FindFirstChild("Right Arm")
+	local leftHand = character:FindFirstChild("LeftHand") or character:FindFirstChild("Left Arm")
+	local rightHand = character:FindFirstChild("RightHand") or character:FindFirstChild("Right Arm")
 
 	if leftHand then
 		table.insert(lines, createLine(leftHand))
@@ -88,6 +91,56 @@ local function setupCharacter(newCharacter)
 	end
 end
 
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "HandLinesMovementGui"
+screenGui.ResetOnSpawn = false
+screenGui.IgnoreGuiInset = true
+screenGui.Parent = player:WaitForChild("PlayerGui")
+
+local moveButton = Instance.new("TextButton")
+moveButton.Name = "MoveForwardButton"
+moveButton.AnchorPoint = Vector2.new(1, 1)
+moveButton.Position = UDim2.new(1, -35, 1, -145)
+moveButton.Size = UDim2.fromOffset(90, 90)
+moveButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+moveButton.BackgroundTransparency = 0.5
+moveButton.BorderSizePixel = 0
+moveButton.Text = "▲"
+moveButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+moveButton.TextScaled = true
+moveButton.Font = Enum.Font.GothamBold
+moveButton.AutoButtonColor = true
+moveButton.Parent = screenGui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(1, 0)
+corner.Parent = moveButton
+
+local stroke = Instance.new("UIStroke")
+stroke.Thickness = 2
+stroke.Transparency = 0.3
+stroke.Parent = moveButton
+
+moveButton.MouseButton1Down:Connect(function()
+	moveForward = true
+end)
+
+moveButton.MouseButton1Up:Connect(function()
+	moveForward = false
+end)
+
+moveButton.MouseLeave:Connect(function()
+	moveForward = false
+end)
+
+moveButton.TouchLongPress:Connect(function(_, state)
+	if state == Enum.UserInputState.Begin then
+		moveForward = true
+	elseif state == Enum.UserInputState.End then
+		moveForward = false
+	end
+end)
+
 player.CharacterAdded:Connect(setupCharacter)
 
 if player.Character then
@@ -97,14 +150,19 @@ end
 RunService.RenderStepped:Connect(function()
 	for _, lineData in ipairs(lines) do
 		if typeof(lineData) == "table" and lineData.hand and lineData.hand.Parent then
-			local hand = lineData.hand
-			local attachment0 = lineData.attachment0
-			local attachment1 = lineData.attachment1
+			local handCFrame = lineData.hand.CFrame
 
-			local handCFrame = hand.CFrame
+			lineData.attachment0.WorldCFrame = handCFrame * CFrame.new(0, -0.15, 0)
+			lineData.attachment1.WorldCFrame = handCFrame * CFrame.new(0, -LINE_LENGTH, 0)
+		end
+	end
 
-			attachment0.WorldCFrame = handCFrame * CFrame.new(0, -0.15, 0)
-			attachment1.WorldCFrame = handCFrame * CFrame.new(0, -LINE_LENGTH, 0)
+	if humanoid and humanoid.Parent and moveForward then
+		local camera = workspace.CurrentCamera
+		local direction = Vector3.new(camera.CFrame.LookVector.X, 0, camera.CFrame.LookVector.Z)
+
+		if direction.Magnitude > 0 then
+			humanoid:Move(direction.Unit, false)
 		end
 	end
 end)
