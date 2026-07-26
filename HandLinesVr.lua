@@ -1,5 +1,5 @@
 -- made by haker999
--- V2.1
+-- V2.3
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -62,14 +62,11 @@ local function createLine(hand)
 	beam.Segments = 10
 	beam.Parent = linesFolder
 
-	table.insert(lines, attachment0)
-	table.insert(lines, attachment1)
-	table.insert(lines, beam)
-
 	return {
 		hand = hand,
 		attachment0 = attachment0,
-		attachment1 = attachment1
+		attachment1 = attachment1,
+		beam = beam
 	}
 end
 
@@ -99,9 +96,9 @@ screenGui.Parent = player:WaitForChild("PlayerGui")
 
 local moveButton = Instance.new("TextButton")
 moveButton.Name = "MoveForwardButton"
-moveButton.AnchorPoint = Vector2.new(1, 1)
-moveButton.Position = UDim2.new(1, -35, 1, -145)
-moveButton.Size = UDim2.fromOffset(90, 90)
+moveButton.AnchorPoint = Vector2.new(1, 0)
+moveButton.Position = UDim2.new(1, -35, 0, 110)
+moveButton.Size = UDim2.fromOffset(45, 45)
 moveButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 moveButton.BackgroundTransparency = 0.5
 moveButton.BorderSizePixel = 0
@@ -117,26 +114,18 @@ corner.CornerRadius = UDim.new(1, 0)
 corner.Parent = moveButton
 
 local stroke = Instance.new("UIStroke")
-stroke.Thickness = 2
+stroke.Thickness = 1.5
 stroke.Transparency = 0.3
 stroke.Parent = moveButton
 
-moveButton.MouseButton1Down:Connect(function()
-	moveForward = true
-end)
-
-moveButton.MouseButton1Up:Connect(function()
-	moveForward = false
-end)
-
-moveButton.MouseLeave:Connect(function()
-	moveForward = false
-end)
-
-moveButton.TouchLongPress:Connect(function(_, state)
-	if state == Enum.UserInputState.Begin then
+moveButton.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
 		moveForward = true
-	elseif state == Enum.UserInputState.End then
+	end
+end)
+
+moveButton.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
 		moveForward = false
 	end
 end)
@@ -149,7 +138,7 @@ end
 
 RunService.RenderStepped:Connect(function()
 	for _, lineData in ipairs(lines) do
-		if typeof(lineData) == "table" and lineData.hand and lineData.hand.Parent then
+		if lineData.hand and lineData.hand.Parent then
 			local handCFrame = lineData.hand.CFrame
 
 			lineData.attachment0.WorldCFrame = handCFrame * CFrame.new(0, -0.15, 0)
